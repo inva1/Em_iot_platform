@@ -7,20 +7,20 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .routes import health, telemetry
-from influxdb_layer.client import InfluxDBManager
+from mongodb_layer.client import MongoDBManager
 
-# Shared InfluxDB manager instance
-_influx_manager: InfluxDBManager | None = None
+# Shared MongoDB manager instance
+_mongo_manager: MongoDBManager | None = None
 
 
-def create_app(influx_manager: InfluxDBManager | None = None) -> FastAPI:
+def create_app(mongo_manager: MongoDBManager | None = None) -> FastAPI:
     """Create and configure the FastAPI application."""
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         # Startup
-        if influx_manager:
-            telemetry.influx_manager = influx_manager
+        if mongo_manager:
+            telemetry.mongo_manager = mongo_manager
         yield
         # Shutdown — nothing to clean up
 

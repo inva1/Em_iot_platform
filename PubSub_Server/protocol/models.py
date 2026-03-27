@@ -13,11 +13,12 @@ from typing import Any, Optional
 
 class ConnectPayload(BaseModel):
     """Sent by device to authenticate with the broker."""
-    device_id: str = Field(..., description="Device identifier, e.g. 'ESP32_01'")
-    token: str = Field(..., description="Auth token from POST /api/v1/devices/{id}/token")
+    device_id: str = Field(..., description="Device identifier (e.g., 'ESP32_01')")
+    token: str = Field(..., description="Authentication token provided by the backend")
+    secret: str = Field(..., description="Device secret for 3-part auth")
     client_version: Optional[str] = Field(
         default="1.0",
-        description="Protocol version for compatibility"
+        description="Protocol tracking version"
     )
 
 

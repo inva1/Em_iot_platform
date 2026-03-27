@@ -186,11 +186,15 @@ boolean IoTPubSubClient::waitForResponse(uint8_t expectedType, char* payload, ui
 
 // ── Connection ──────────────────────────────────────────────────────────────
 
-boolean IoTPubSubClient::connect(const char* deviceId, const char* token) {
-    return connect(deviceId, token, "1.0");
+boolean IoTPubSubClient::connect(const char* deviceId, const char* token, const char* secret) {
+    return connect(deviceId, token, secret, "1.0");
 }
 
-boolean IoTPubSubClient::connect(const char* deviceId, const char* token, const char* clientVersion) {
+boolean IoTPubSubClient::connect(const char* deviceId, const char* token, const char* secret, const char* clientVersion) {
+    if (connected()) {
+        return true;
+    }
+
     if (!_client) {
         _state = IOT_CONNECT_FAILED;
         return false;

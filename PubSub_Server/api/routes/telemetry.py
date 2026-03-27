@@ -8,12 +8,12 @@ historical and latest sensor data from InfluxDB.
 from fastapi import APIRouter, HTTPException, Query
 from typing import Optional
 
-from influxdb_layer.queries import query_device_telemetry, query_latest_telemetry
+from mongodb_layer.queries import query_device_telemetry, query_latest_telemetry
 
 router = APIRouter(prefix="/api/v1/devices", tags=["telemetry"])
 
 # Will be set by app.py during startup
-influx_manager = None
+mongo_manager = None
 
 
 @router.get("/{device_id}/telemetry")
@@ -37,20 +37,14 @@ async def get_device_telemetry(
     Example:
         GET /api/v1/devices/ESP32_01/telemetry?start=-24h&fields=temperature,humidity&aggregate=1h
     """
-    if not influx_manager:
-        raise HTTPException(status_code=503, detail="InfluxDB not initialized")
-
-    field_list = fields.split(",") if fields else None
+    if not mongo_manager:
+        raise HTTPException(status_code=503, detail="MongoDB not initialized")
 
     try:
-        data = query_device_telemetry(
-            influx=influx_manager,
+        data = await query_device_telemetry(
+            mongo=mongo_manager,
             device_id=device_id,
-            start=start,
-            stop=stop,
-            fields=field_list,
             limit=limit,
-            aggregate_window=aggregate,
         )
         return {
             "device_id": device_id,
@@ -69,12 +63,12 @@ async def get_latest_telemetry(device_id: str):
     Example:
         GET /api/v1/devices/ESP32_01/telemetry/latest
     """
-    if not influx_manager:
-        raise HTTPException(status_code=503, detail="InfluxDB not initialized")
+    if not mongo_manager:
+        raise HTTPException(status_code=503, detail="MongoDB not initialized")
 
     try:
-        latest = query_latest_telemetry(
-            influx=influx_manager,
+        latest = await query_latest_telemetry(
+            mongo=mongo_manager,
             device_id=device_id,
         )
         return latest

@@ -9,8 +9,8 @@ aiohttp>=3.9,<4.0
 # Kafka
 confluent-kafka>=2.3,<3.0
 
-# InfluxDB
-influxdb-client>=1.40,<2.0
+# MongoDB
+motor>=3.3,<4.0
 
 # Query API
 fastapi>=0.110,<1.0

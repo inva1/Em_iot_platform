@@ -18,13 +18,14 @@ logger = logging.getLogger(__name__)
 STUB_AUTH = os.getenv("STUB_AUTH", "true").lower() == "true"
 
 
-async def verify_device_token(device_id: str, token: str) -> tuple[bool, str]:
+async def verify_device_token(device_id: str, token: str, secret: str) -> tuple[bool, str]:
     """
-    Verify a device's authentication token.
+    Verify a device's authentication token and secret.
 
     Args:
         device_id: The device identifier.
         token: The auth token to verify.
+        secret: The device secret (3-part auth).
 
     Returns:
         Tuple of (is_valid, reason).
@@ -42,7 +43,7 @@ async def verify_device_token(device_id: str, token: str) -> tuple[bool, str]:
         async with aiohttp.ClientSession() as session:
             async with session.post(
                 config.AUTH_VERIFY_URL,
-                json={"device_id": device_id, "token": token},
+                json={"device_id": device_id, "token": token, "secret": secret},
                 timeout=aiohttp.ClientTimeout(total=config.AUTH_TIMEOUT),
             ) as response:
                 if response.status == 200:

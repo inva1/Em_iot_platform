@@ -48,7 +48,7 @@ docker compose logs -f broker
 ## Project Structure
 
 ```
-Em_iot_platform/
+Em_Iot_platform/
 ├── PubSub_Server/          # TCP broker + Kafka + InfluxDB + API
 │   ├── protocol/           # Binary protocol library (Library Design)
 │   ├── broker/             # asyncio TCP server

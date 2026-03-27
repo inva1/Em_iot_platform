@@ -10,21 +10,17 @@ class Config:
 
     # ── Broker ───────────────────────────────────────────────────────────────
     BROKER_HOST: str = os.getenv("BROKER_HOST", "0.0.0.0")
-    BROKER_PORT: int = int(os.getenv("BROKER_PORT", "9000"))
+    BROKER_PORT: int = int(os.getenv("BROKER_PORT", "1883"))  # Changed to MQTT default per Peem's diagram
 
     # ── Kafka ────────────────────────────────────────────────────────────────
     KAFKA_BOOTSTRAP_SERVERS: str = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
-    KAFKA_TOPIC_TELEMETRY: str = os.getenv("KAFKA_TOPIC_TELEMETRY", "iot.telemetry")
-    KAFKA_TOPIC_COMMANDS: str = os.getenv("KAFKA_TOPIC_COMMANDS", "iot.commands")
-    KAFKA_TOPIC_DEVICE_STATUS: str = os.getenv("KAFKA_TOPIC_DEVICE_STATUS", "iot.device_status")
     KAFKA_CONSUMER_GROUP: str = os.getenv("KAFKA_CONSUMER_GROUP", "iot-platform")
 
-    # ── InfluxDB ─────────────────────────────────────────────────────────────
-    INFLUXDB_URL: str = os.getenv("INFLUXDB_URL", "http://localhost:8086")
-    INFLUXDB_TOKEN: str = os.getenv("INFLUXDB_TOKEN", "my-super-secret-token")
-    INFLUXDB_ORG: str = os.getenv("INFLUXDB_ORG", "iot-platform")
-    INFLUXDB_BUCKET: str = os.getenv("INFLUXDB_BUCKET", "telemetry")
-    INFLUXDB_RETENTION_DAYS: int = int(os.getenv("INFLUXDB_RETENTION_DAYS", "30"))
+    # ── MongoDB ──────────────────────────────────────────────────────────────
+    MONGO_URI: str = os.getenv("MONGO_URI", "mongodb://admin:admin12345@localhost:27017")
+    MONGO_DB: str = os.getenv("MONGO_DB", "iot-platform")
+    MONGO_COLLECTION_TELEMETRY: str = os.getenv("MONGO_COLLECTION_TELEMETRY", "telemetry")
+    MONGO_TTL_SECONDS: int = int(os.getenv("MONGO_TTL_SECONDS", "2592000"))  # 30 days Default TTL
 
     # ── Auth (backend API for token verification) ────────────────────────────
     # Peem's backend endpoint — stubbed until confirmed

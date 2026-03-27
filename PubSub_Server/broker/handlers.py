@@ -47,9 +47,9 @@ async def handle_connect(conn: "ClientConnection", payload: dict) -> bool:
         f"(version: {connect_data.client_version})"
     )
 
-    # Verify token
+    # Verify token & secret (3-part auth)
     is_valid, reason = await verify_device_token(
-        connect_data.device_id, connect_data.token
+        connect_data.device_id, connect_data.token, connect_data.secret
     )
 
     if is_valid:

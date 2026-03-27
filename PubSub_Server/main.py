@@ -22,8 +22,8 @@ from broker.server import BrokerServer
 from kafka_bridge.producer import KafkaMessageProducer
 from kafka_bridge.consumer import KafkaTopicConsumer
 from kafka_bridge.topics import TOPIC_TELEMETRY, TOPIC_COMMANDS
-from influxdb_layer.client import InfluxDBManager
-from influxdb_layer.writer import TelemetryWriter
+from mongodb_layer.client import MongoDBManager
+from mongodb_layer.writer import TelemetryWriter
 from api.app import create_app
 from protocol.frames import encode_frame
 from protocol.constants import MessageType
@@ -80,14 +80,14 @@ async def main():
     logger.info("  IoT Platform PubSub Server Starting")
     logger.info("=" * 60)
 
-    # ── 1. Initialize InfluxDB ────────────────────────────────────────────
-    influx_manager = InfluxDBManager()
+    # ── 1. Initialize MongoDB ─────────────────────────────────────────────
+    mongo_manager = MongoDBManager()
     try:
-        influx_manager.initialize()
+        await mongo_manager.initialize()
     except Exception as e:
-        logger.error(f"InfluxDB initialization failed: {e}")
-        logger.warning("Continuing without InfluxDB (telemetry storage disabled)")
-        influx_manager = None
+        logger.error(f"MongoDB initialization failed: {e}")
+        logger.warning("Continuing without MongoDB (telemetry storage disabled)")
+        mongo_manager = None
 
     # ── 2. Initialize Kafka producer ──────────────────────────────────────
     kafka_producer = KafkaMessageProducer()
@@ -107,9 +107,9 @@ async def main():
     telemetry_consumer = None
     commands_consumer = None
 
-    if influx_manager and kafka_producer:
-        # Telemetry consumer → InfluxDB
-        writer = TelemetryWriter(influx_manager)
+    if mongo_manager and kafka_producer:
+        # Telemetry consumer → MongoDB
+        writer = TelemetryWriter(mongo_manager)
         telemetry_consumer = KafkaTopicConsumer(
             topics=[TOPIC_TELEMETRY],
             group_id=f"{config.KAFKA_CONSUMER_GROUP}-telemetry",
@@ -132,7 +132,7 @@ async def main():
         commands_consumer.start()
 
     # ── 5. Start FastAPI in background thread ────────────────────────────
-    app = create_app(influx_manager)
+    app = create_app(mongo_manager)
     api_config = uvicorn.Config(
         app,
         host=config.API_HOST,
@@ -162,8 +162,8 @@ async def main():
 
         if kafka_producer:
             kafka_producer.close()
-        if influx_manager:
-            influx_manager.close()
+        if mongo_manager:
+            mongo_manager.close()
 
         api_server.should_exit = True
 

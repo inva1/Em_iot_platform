@@ -21,7 +21,7 @@ class TestFrameEncoding:
     """Test binary frame encoding."""
 
     def test_encode_connect(self):
-        payload = {"device_id": "ESP32_01", "token": "abc123"}
+        payload = {"device_id": "ESP32_01", "token": "abc123", "secret": "s3cr3t"}
         frame = encode_frame(MessageType.CONNECT, payload)
 
         assert frame[0] == 0x01  # CONNECT
@@ -58,7 +58,7 @@ class TestFrameDecoding:
     """Test binary frame decoding."""
 
     def test_decode_connect(self):
-        payload = {"device_id": "ESP32_01", "token": "secret"}
+        payload = {"device_id": "ESP32_01", "token": "secret", "secret": "s3cr3t"}
         frame = encode_frame(MessageType.CONNECT, payload)
         msg_type, flags, decoded = decode_frame(frame)
 
@@ -66,6 +66,7 @@ class TestFrameDecoding:
         assert flags == 0x00
         assert decoded["device_id"] == "ESP32_01"
         assert decoded["token"] == "secret"
+        assert decoded["secret"] == "s3cr3t"
 
     def test_decode_pingreq(self):
         frame = encode_frame(MessageType.PINGREQ)
@@ -98,7 +99,7 @@ class TestFrameDecoding:
     def test_all_message_types_roundtrip(self):
         """Every message type should survive encode-decode roundtrip."""
         payloads = {
-            MessageType.CONNECT: {"device_id": "test", "token": "t"},
+            MessageType.CONNECT: {"device_id": "test", "token": "t", "secret": "s"},
             MessageType.CONNACK: {"status": "ok"},
             MessageType.PUBLISH: {"topic": "a/b", "payload": {}},
             MessageType.PUBACK: {"topic": "a/b", "status": "ok"},
@@ -126,13 +127,14 @@ class TestModels:
     """Test Pydantic payload models."""
 
     def test_connect_payload_valid(self):
-        p = ConnectPayload(device_id="ESP32_01", token="abc")
+        p = ConnectPayload(device_id="ESP32_01", token="abc", secret="s3cr3t")
         assert p.device_id == "ESP32_01"
+        assert p.secret == "s3cr3t"
         assert p.client_version == "1.0"
 
     def test_connect_payload_missing_required(self):
         with pytest.raises(Exception):
-            ConnectPayload(device_id="ESP32_01")  # missing token
+            ConnectPayload(device_id="ESP32_01", token="abc")  # missing secret
 
     def test_connack_ok(self):
         p = ConnackPayload(status="ok")

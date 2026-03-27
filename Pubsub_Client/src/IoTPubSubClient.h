@@ -112,9 +112,14 @@ public:
     boolean setBufferSize(uint16_t size);
     uint16_t getBufferSize();
 
-    // Connection
-    boolean connect(const char* deviceId, const char* token);
-    boolean connect(const char* deviceId, const char* token, const char* clientVersion);
+    // ── Connection ─────────────────────────────────────────────────────────
+
+    /**
+     * Authenticate with the broker using the custom protocol.
+     * Uses 3-part auth: clientId, token, and secret.
+     */
+    boolean connect(const char* deviceId, const char* token, const char* secret);
+    boolean connect(const char* deviceId, const char* token, const char* secret, const char* clientVersion);
     void disconnect();
     boolean connected();
     int state();

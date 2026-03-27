@@ -38,28 +38,40 @@ services:
       start_period: 30s
     restart: unless-stopped
 
-  # ── InfluxDB 2.x ────────────────────────────────────────────────────────
-  influxdb:
-    image: influxdb:2.7
-    container_name: iot-influxdb
+  # ── MongoDB (Time Series + TTL) ──────────────────────────────────────────
+  mongodb:
+    image: mongo:7
+    container_name: iot-mongodb
     ports:
-      - "8086:8086"
+      - "27017:27017"
     environment:
-      - DOCKER_INFLUXDB_INIT_MODE=setup
-      - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUXDB_USERNAME:-admin}
-      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_PASSWORD:-admin12345}
-      - DOCKER_INFLUXDB_INIT_ORG=${INFLUXDB_ORG:-iot-platform}
-      - DOCKER_INFLUXDB_INIT_BUCKET=${INFLUXDB_BUCKET:-telemetry}
-      - DOCKER_INFLUXDB_INIT_RETENTION=${INFLUXDB_RETENTION:-720h}
-      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUXDB_TOKEN:-my-super-secret-token}
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASS:-admin12345}
+    command: ["--setParameter", "ttlMonitorSleepSecs=60"] # Check TTL every 60s
     volumes:
-      - influxdb_data:/var/lib/influxdb2
-      - influxdb_config:/etc/influxdb2
+      - mongodb_data:/data/db
     healthcheck:
-      test: ["CMD", "influx", "ping"]
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
+
+  # ── Mongo Express (Web UI for MongoDB) ───────────────────────────────────
+  mongo-express:
+    image: mongo-express:1.0.2-20
+    container_name: iot-mongo-express
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_USER:-admin}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_PASS:-admin12345}
+      ME_CONFIG_MONGODB_URL: mongodb://${MONGO_USER:-admin}:${MONGO_PASS:-admin12345}@mongodb:27017/
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: password
+    depends_on:
+      mongodb:
+        condition: service_healthy
     restart: unless-stopped
 
   # ── PubSub Broker + Query API ──────────────────────────────────────────
@@ -73,12 +85,10 @@ services:
       - "8080:8080"    # Query API (dashboard/app queries here)
     environment:
       - BROKER_HOST=0.0.0.0
-      - BROKER_PORT=9000
+      - BROKER_PORT=1883
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
-      - INFLUXDB_URL=http://influxdb:8086
-      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-my-super-secret-token}
-      - INFLUXDB_ORG=${INFLUXDB_ORG:-iot-platform}
-      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-telemetry}
+      - MONGO_URI=mongodb://${MONGO_USER:-admin}:${MONGO_PASS:-admin12345}@mongodb:27017
+      - MONGO_DB=${MONGO_DB:-iot-platform}
       - API_HOST=0.0.0.0
       - API_PORT=8080
       - STUB_AUTH=true
@@ -86,14 +96,12 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
-      influxdb:
+      mongodb:
         condition: service_healthy
     restart: unless-stopped
 
 volumes:
   kafka_data:
     driver: local
-  influxdb_data:
-    driver: local
-  influxdb_config:
+  mongodb_data:
     driver: local

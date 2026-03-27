@@ -50,11 +50,13 @@ Every TCP message consists of a **4-byte fixed header** followed by an optional 
 {
   "device_id": "ESP32_01",
   "token": "auth_token_from_api",
+  "secret": "my_device_secret",
   "client_version": "1.0"
 }
 ```
 - `device_id` (required): Device identifier
-- `token` (required): Auth token from `POST /api/v1/devices/{id}/token`
+- `token` (required): Auth token from backend API
+- `secret` (required): Device secret for 3-part auth verification
 - `client_version` (optional): Protocol version
 
 ### CONNACK (0x02)
@@ -91,12 +93,13 @@ or
 
 ## 5. Topic Structure
 
-| Topic Pattern | Direction | Purpose |
-|---------------|-----------|---------|
-| `devices/{id}/telemetry` | Device → Broker | Sensor data |
-| `devices/{id}/status` | Device → Broker | Online/offline |
-| `devices/{id}/commands/#` | Broker → Device | Control commands |
-| `devices/{id}/commands/response` | Device → Broker | Command ACK |
+
+| Topic Pattern | Direction | Purpose | Kafka Mapping |
+|---------------|-----------|---------|---------------|
+| `devices/{id}/telemetry` | Device → Broker | Sensor data | `iot.telemetry` |
+| `devices/{id}/status` | Device → Broker | Online/offline | `iot.device-events` |
+| `devices/{id}/commands/#` | Broker → Device | Control commands | `iot.commands` |
+| `devices/{id}/commands/response` | Device → Broker | Command ACK | `iot.cmd-responses` |
 
 ### Access Control
 - Devices can only publish to `devices/{own_id}/`

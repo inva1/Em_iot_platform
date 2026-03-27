@@ -67,8 +67,8 @@ void reconnect() {
 
         // ── This is the key difference from PubSubClient ──
         // PubSubClient: client.connect("ESP32_01", "user", "pass");
-        // IoTPubSubClient: client.connect("ESP32_01", "my_token");
-        if (client.connect(DEVICE_ID, DEVICE_TOKEN)) {
+        // IoTPubSubClient: client.connect("ESP32_01", "my_token", "my_device_secret"); // Authenticate (3-part auth: clientId, token, secret)
+        if (client.connect(DEVICE_ID, DEVICE_TOKEN, "")) { // Pass empty secret for now
             Serial.println(" connected!");
 
             // Subscribe to commands (wildcard # catches all command types)
